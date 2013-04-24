@@ -16,6 +16,10 @@ Edit your `$HOME/.bash_profile` so that it includes the lines:
 `source $HOME/.dot_files/bashprofile.sh`
 `source $HOME/.bashrc`
 
+For bash completion, symlink:
+`cd`
+`ln -s .dot_files/.bash_completion`
+
 For all other .files or .directories, create symlinks in your homedir, eg.:
 `cd`
 `ln -s .dot_files/.vim`

@@ -1,0 +1,257 @@
+# hdfs(1) completion 
+#
+# Inspired From: http://blog.rapleaf.com/dev/2009/11/17/command-line-auto-completion-for-hadoop-dfs-commands/
+# HDFS Command Reference: http://hadoop.apache.org/common/docs/r0.20.2/hdfs_shell.html
+#
+# author: Dhamodharan Pandurangan 
+# website: http://cloudblog.8kmiles.com/2012/01/09/hadoop-autocomplete-for-hadoop-dfs-commands/
+# version: 0.1.0
+# 
+# changelog 0.1.0:
+#   initial release
+ 
+have hadoop &&
+have hdfs &&
+_hdfs_ls() {
+    if [[ -z "$cur" ]]; then
+      COMPREPLY=( $( compgen -W "$( hdfs -ls / 2&gt;-|grep -v ^Found|awk '{print $8}' )" -- "$cur" ) )
+    elif [[ `echo $cur | grep \/$` ]]; then
+      COMPREPLY=( $( compgen -W "$( hdfs -ls $cur 2&gt;-|grep -v ^Found|awk '{print $8}' )" -- "$cur" ) )
+    else
+      COMPREPLY=( $( compgen -W "$( hdfs -ls $cur* 2&gt;-|grep -v ^Found|awk '{print $8}' )" -- "$cur" ) )
+    fi
+} &&
+_hdfs()
+{
+ 
+  COMPREPLY=()
+  local cur prev words
+  _get_comp_words_by_ref cur prev words
+ 
+  count="${#words[*]}"
+  cmd="${words[1]}"
+  arg1="${words[2]}"
+  arg2="${words[3]}"
+ 
+  if [[ "$prev" == hdfs ]]; then
+    COMPREPLY=( $( compgen -W '-cat -chgrp -chmod -chown -copyFromLocal -copyToLocal -count \
+     -cp -df -du -dus -expunge -get -getmerge -ls -lsr -mkdir -moveFromLocal -moveToLocal \
+     -mv -put -rm -rmr -setrep -stat -tail -test -text -touchz -help' \
+     -- "$cur" ) )
+    return 0
+  fi
+ 
+  if [[ "$cmd" == -moveToLocal ]] ||
+   [[ "$cmd" == -expunge ]] ||
+   [[ "$cmd" == -help ]] ; then
+    return 0
+  fi
+ 
+  #### -chgrp, -chmod, -chown ####
+  #### Usage: hdfs -chgrp [-R] GROUP URI [URI ...]
+  #### Usage: hdfs -chmod [-R]  URI [URI ...]
+  #### Usage: hdfs -chown [-R] [OWNER][:[GROUP]] URI [URI ...]
+  if [[ "$cmd" == -chgrp ]] ||
+   [[ "$cmd" == -chmod ]] ||
+   [[ "$cmd" == -chown ]] ; then
+    if [[ -z "$arg1" ]]; then
+      COMPREPLY=()
+    else
+      if [[ "$arg1" == - ]] ; then
+        COMPREPLY=( $( compgen -W '-R' -- "$cur" ) )
+      elif [[ "$arg1" == -R ]] ; then
+        if [[ -z "$arg2" ]] ; then
+          COMPREPLY=()
+        elif [[ "$arg2" == "$cur" ]] ; then
+          COMPREPLY=()
+        else
+          _hdfs_ls
+        fi
+      elif [[ "$arg1" == "$cur" ]] ; then
+         COMPREPLY=()
+      else
+        _hdfs_ls
+      fi
+    fi
+   return 0
+  fi
+ 
+  #### -copyFromLocal ####
+  #### Usage: hdfs -copyFromLocal ... URI
+  #### Usage: hdfs -moveFromLocal ... URI
+  #### Usage: hdfs -put ... URI
+  if [[ "$cmd" == -copyFromLocal ]] ||
+    [[ "$cmd" == -put ]] ||
+    [[ "$cmd" == -moveFromLocal ]] ; then
+    if [[ -z "$arg1" ]]; then
+      _filedir
+    else
+      if [[ "$arg1" == "$cur" ]] ; then
+         _filedir
+      else
+        _hdfs_ls
+      fi
+    fi
+    return 0
+  fi
+ 
+  #### -copyToLocal ####
+  #### Usage: hdfs -copyToLocal [-ignorecrc] [-crc] URI
+  #### Usage: hdfs -get [-ignorecrc] [-crc] URI
+  if [[ "$cmd" == -copyToLocal ]]
+   [[ "$cmd" == -get ]] ; then
+    if [[ "$count" == 3 ]]; then
+      if [[ "$cur" == -* ]] ; then
+        COMPREPLY=( $( compgen -W '-crc -ignorecrc' -- "$cur" ) )
+      else
+        _hdfs_ls
+      fi
+    elif [[ "$count" == 4 ]]; then
+      if [[ "$arg1" == -* ]] ; then
+        _hdfs_ls
+      else
+        _filedir
+      fi
+    elif [[ "$count" == 5 ]]; then
+      _filedir
+    fi
+    return 0
+  fi
+ 
+  #### -count ####
+  #### Usage: hdfs -count [-q] URI [URI ...]
+  if [[ "$cmd" == -count ]] ; then
+    if [[ "$count" == 3 ]]; then
+      if [[ "$cur" == -* ]] ; then
+        COMPREPLY=( $( compgen -W '-q' -- "$cur" ) )
+      else
+        _hdfs_ls
+      fi
+    else
+      _hdfs_ls
+    fi
+    return 0
+  fi
+ 
+  #### -cp, -cat, -mkdir, -df, -du, -dus, -ls, -lsr, -touchz, -text ####
+  #### Usage: hdfs -cp URI [URI ...] dest-URI
+  #### Usage: hdfs -mv URI [URI ...] dest-URI
+  #### Usage: hdfs -cat URI [URI ...]
+  #### Usage: hdfs -mkdir URI [URI ...]
+  #### Usage: hdfs -df URI [URI ...]
+  #### Usage: hdfs -du URI [URI ...]
+  #### Usage: hdfs -dus URI [URI ...]
+  #### Usage: hdfs -ls URI [URI ...]
+  #### Usage: hdfs -lsr URI [URI ...]
+  #### Usage: hdfs -touchz URI [URI ...]
+  #### Usage: hdfs -text URI [URI ...]
+  if [[ "$cmd" == -cp ]] ||
+   [[ "$cmd" == -mv ]] ||
+   [[ "$cmd" == -cat ]] ||
+   [[ "$cmd" == -mkdir ]] ||
+   [[ "$cmd" == -df ]] ||
+   [[ "$cmd" == -du ]] ||
+   [[ "$cmd" == -dus ]] ||
+   [[ "$cmd" == -ls ]] ||
+   [[ "$cmd" == -lsr ]] ||
+   [[ "$cmd" == -touchz ]] ||
+   [[ "$cmd" == -text ]] ; then
+    _hdfs_ls
+    return 0
+  fi
+ 
+  #### -getmerge ####
+  #### Usage: hdfs -getmerge   [addnl]
+  if [[ "$cmd" == -getmerge ]] ; then
+    if [[ "$count" == 3 ]]; then
+      _hdfs_ls
+    elif [[ "$count" == 4 ]]; then
+      _filedir
+    elif [[ "$count" == 5 ]]; then
+      COMPREPLY=( $( compgen -W 'addnl' -- "$cur" ) )
+    fi
+    return 0
+  fi
+ 
+  #### -getmerge ####
+  #### Usage: hdfs -rm [-skipTrash] ...
+  #### Usage: hdfs -rmr [-skipTrash] ...
+  if [[ "$cmd" == -rm ]] || [[ "$cmd" == -rmr ]] ; then
+    if [[ "$count" == 3 ]]; then
+      if [[ "$cur" == -* ]] ; then
+        COMPREPLY=( $( compgen -W '-skipTrash' -- "$cur" ) )
+      else
+        _hdfs_ls
+      fi
+    else
+      _hdfs_ls
+    fi
+    return 0
+  fi
+ 
+  #### -tail ####
+  #### Usage: hdfs -tail [-f] URI
+  if [[ "$cmd" == -tail ]] ; then
+    if [[ "$count" == 3 ]]; then
+      if [[ "$cur" == -* ]] ; then
+        COMPREPLY=( $( compgen -W '-f' -- "$cur" ) )
+      else
+        _hdfs_ls
+      fi
+    elif [[ "$count" == 4 ]]; then
+      if [[ "$arg1" == -f ]] ; then
+        _hdfs_ls
+      fi
+    fi
+    return 0
+  fi
+ 
+  #### -test ####
+  #### Usage: hdfs -test [-ezd] URI
+  if [[ "$cmd" == -test ]] ; then
+    if [[ "$count" == 3 ]]; then
+      if [[ "$cur" == -* ]] ; then
+        COMPREPLY=( $( compgen -W '-e -z -d' -- "$cur" ) )
+      else
+        _hdfs_ls
+      fi
+    elif [[ "$count" == 4 ]]; then
+      if [[ "$arg1" == -* ]] ; then
+        _hdfs_ls
+      fi
+    fi
+    return 0
+  fi
+ 
+  #### -setrep ####
+  #### Usage: hdfs -setrep n [-w] [-R] URI
+  if [[ "$cmd" == -setrep ]] ; then
+    if [[ "$count" == 3 ]]; then
+      return 0
+    elif [[ "$count" == 4 ]]; then
+      if [[ "$cur" == -* ]] ; then
+        COMPREPLY=( $( compgen -W '-w -R' -- "$cur" ) )
+      else
+        _hdfs_ls
+      fi
+    elif [[ "$count" == 5 ]] || [[ "$count" == 6 ]] ; then
+      if [[ "$prev" == -w ]] && [[ "$cur" == -* ]] ; then
+        COMPREPLY=( $( compgen -W '-R' -- "$cur" ) )
+      elif [[ "$prev" == -R ]] && [[ "$cur" == -* ]] ; then
+        COMPREPLY=( $( compgen -W '-w' -- "$cur" ) )
+      else
+        _hdfs_ls
+      fi
+    fi
+    return 0
+  fi
+ 
+  #### -stat ####
+  #### Usage: hdfs -stat [format-%b %n %o %r %y %Y] URI
+  if [[ "$cmd" == -stat ]] ; then
+    _hdfs_ls
+    return 0
+  fi
+ 
+} &&
+complete -F _hdfs hdfs
