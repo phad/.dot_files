@@ -1,6 +1,6 @@
 #!/bin/bash
 
-alias bi='bundle install'
+alias bi='bundle install --path vendor/bundle --local'
 alias be='bundle exec'
 alias bu='bundle update'
-alias bie='bundle install && bundle exec'
+alias bie='bundle install --path vendor/bundle --local && bundle exec'
