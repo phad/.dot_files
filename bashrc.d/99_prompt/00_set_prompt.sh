@@ -68,8 +68,7 @@ ${LIGHT_BLUE})-${YELLOW}-\${fill}${LIGHT_BLUE}-(\
 $YELLOW\${newPWD}\
 $LIGHT_BLUE)-$YELLOW-$LIGHT_BLUE-(\
 $WHITE\$(date +%H:%M:%S)$LIGHT_BLUE)-$YELLOW--\
-\$(__git_ps1 '$LIGHT_BLUE-($RED%s$LIGHT_BLUE)')-$YELLOW--\
-$LIGHT_BLUE-($GREEN\$(rvm current)$LIGHT_BLUE)\
+\$(__git_ps1 '$LIGHT_BLUE-($RED%s$LIGHT_BLUE)')\
 \n\
 $NO_COLOUR$ " 
 
