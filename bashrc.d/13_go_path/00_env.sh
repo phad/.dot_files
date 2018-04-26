@@ -1,8 +1,10 @@
 #!/bin/bash
 
-GOPATH=$HOME/go
-export GOPATH
+GOROOT=/opt/go
+export GOROOT
 
-PATH=$PATH:$GOPATH/bin
+PATH=$PATH:$GOROOT/bin
 export PATH
 
+GOFILES=$HOME/go
+export GOFILES
